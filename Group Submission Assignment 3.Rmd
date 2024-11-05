@@ -275,20 +275,21 @@ print(paste("The alternative allele: ", variants[1,"ALT"]))
 
 ##Q5.2
 ```{r}
-cols_divide <- strsplit(vcf[108,1], ":")
-cols_divide <- cols_divide[[1]]
-cols_divide <- cols_divide[2]
-col_names <- unlist(strsplit(cols_divide, "\\|"))
+#Using the ANN line of the VCF file to get column names for the dataframe. 
+cols_divide <- strsplit(vcf[108,1], ":") #Isolate ANN line
+cols_divide <- cols_divide[[1]] 
+cols_divide <- cols_divide[2] #Getting the string after the :
+col_names <- unlist(strsplit(cols_divide, "\\|")) #Separate that string by "\" and get a vector of strings. 
 
-variants$INFO <- as.character(variants$INFO)
-info <- strsplit(variants[1,8],"ANN")
+variants$INFO <- as.character(variants$INFO) 
+info <- strsplit(variants[1,8],"ANN") #getting the first line of the variant after ANN
 info_1  <- info[[1]]
 info_ann <- info_1[2]
-info_sep <- unlist(strsplit(info_ann, ","))
-info_ann_sep_1 <- unlist(strsplit(info_sep[1], "\\|"))
-info_ann_sep_1[16] <- ""
+info_sep <- unlist(strsplit(info_ann, ",")) #Separate it by comma
+info_ann_sep_1 <- unlist(strsplit(info_sep[1], "\\|")) #Then separate by "\" 
+info_ann_sep_1[16] <- "" #add last element, was not included because it is empty. 
 
-df <- as.data.frame(t(info_ann_sep_1))
+df <- as.data.frame(t(info_ann_sep_1)) #form df with first variant of ANN
 colnames(df) <- col_names
 
 df
@@ -297,22 +298,17 @@ df
 ##Q5.3: 
 The annotation field tells us that the variant is an intron. Therefore this part of the sequence does not code protein. 
 ```{r}
-print(df$` Annotation `) 
+print(df$` Annotation `) #prints the annotation field 
 ```
 
 ##Q5.4
 ```{r}
-cols_divide <- strsplit(vcf[108,1], ":")
-cols_divide <- cols_divide[[1]]
-cols_divide <- cols_divide[2]
-col_names <- unlist(strsplit(cols_divide, "\\|"))
-
 variants$INFO <- as.character(variants$INFO)
-info <- strsplit(variants[683,8],"ANN")
+info <- strsplit(variants[683,8],"ANN") #getting the 683 line of the variant after ANN
 info_1  <- info[[1]]
 info_ann <- info_1[2]
 info_sep <- unlist(strsplit(info_ann, ","))
-info_ann_sep_1 <- unlist(strsplit(info_sep[1], "\\|"))
+info_ann_sep_1 <- unlist(strsplit(info_sep[1], "\\|")) 
 info_ann_sep_1[16] <- ""
 
 df <- as.data.frame(t(info_ann_sep_1))
