@@ -297,5 +297,26 @@ df
 ##Q5.3: 
 The annotation field tells us that the variant is an intron. Therefore this part of the sequence does not code protein. 
 ```{r}
-print(df$` Annotation `)
+print(df$` Annotation `) 
 ```
+
+##Q5.4
+```{r}
+cols_divide <- strsplit(vcf[108,1], ":")
+cols_divide <- cols_divide[[1]]
+cols_divide <- cols_divide[2]
+col_names <- unlist(strsplit(cols_divide, "\\|"))
+
+variants$INFO <- as.character(variants$INFO)
+info <- strsplit(variants[683,8],"ANN")
+info_1  <- info[[1]]
+info_ann <- info_1[2]
+info_sep <- unlist(strsplit(info_ann, ","))
+info_ann_sep_1 <- unlist(strsplit(info_sep[1], "\\|"))
+info_ann_sep_1[16] <- ""
+
+df <- as.data.frame(t(info_ann_sep_1))
+colnames(df) <- col_names
+print(df$` Gene_Name `)
+```
+
