@@ -4,33 +4,34 @@ author: "Group 15: Jordan Thompson, Arabela Tan, Zhipeng Ren"
 date: "2024-11-05"
 output: pdf_document
 ---
-
+Setting working directory
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "/Users/arabelatan/Desktop/[1] UBC/[3] Third Year/[1] First Term/BMEG 310/[3] Group Projects/Assignment 3")
 ```
-a
-Q1: Why areas of the genome with high GC content are hard to sequence?
+
+## Q1: Why areas of the genome with high GC content are hard to sequence?
 
 Areas in the genome with high G-C content are challenging to sequence because they have strong hydrogen bonds. These hydrogen bonds are stable, and therefore can form secondary structures. These structures do not respond to amplification, and therefore areas with high G-C content are challenging to accurately amplify. 
 
 
-Q3
+## Q3
 ```{r}
-read.csv("C:\\Users\\jjtho\\Downloads\\single_cell_RNA_seq_bam (1).sam", nrows=73, sep="\t", header=FALSE,
+single_cell_RNA_seq <- read.csv("single_cell_RNA_seq_bam.sam", nrows=73, sep="\t", header=FALSE,
 fill=TRUE)
 ```
 
+## Q5.1: 
 
-Q5.1: 
 ```{r}
-vcf_con <- file("C:\\Users\\jjtho\\Downloads\\RNA_seq_annotated_variants (1).vcf", open="r")
+vcf_con <- file("RNA_seq_annotated_variants.vcf", open="r")
 vcf_file <- readLines(vcf_con)
 close(vcf_con)
 vcf <- data.frame(vcf_file)
 header <- vcf[grepl("##", vcf$vcf_file), ]
 factor(header)
-variants <- read.csv("C:\\Users\\jjtho\\Downloads\\RNA_seq_annotated_variants (1).vcf", skip=length(header),
+variants <- read.csv("RNA_seq_annotated_variants.vcf", skip=length(header),
 header=TRUE, sep="\t")
 ```
+
 The reference allele base at the site is G. 
 The alternative allele is A.
