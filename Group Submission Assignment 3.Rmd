@@ -224,6 +224,26 @@ sam_9 <- sam[which(sam$V3 == 9 & sam$V4 >= 40801273 & sam$V4 <= 40805199), ]
 length(sam_9$V4)
 ```
 
+### Q4.8.
+```{r}
+#Number of reads that have mapping quality less than 50
+mq_less50 <-nrow(sam[sam[5]<50,])
+
+print(paste("Number of reads that have mapping quality of less than 50:", mq_less50 ))
+
+```
+
+### Q4.9.
+```{r}
+#Isolates the reads with mapping quality of less than 50
+mapping_quality_data <- sam[sam$V5 < 50, ]
+
+# Calculate the mean mapping quality for this subset
+mean_mapping_quality <- mean(mapping_quality_data$V5)
+
+#Prints the result
+print(paste("Mean Mapping Quality of Reads:", mean_mapping_quality))
+```
 
 ## Q5.1: 
 ```{r}
