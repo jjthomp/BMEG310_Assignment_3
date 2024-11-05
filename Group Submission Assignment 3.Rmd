@@ -245,6 +245,16 @@ mean_mapping_quality <- mean(mapping_quality_data$V5)
 print(paste("Mean Mapping Quality of Reads:", mean_mapping_quality))
 ```
 
+### Q4.10
+```{r}
+tdTomato_reads <- sam[sam$V3 == "tdTomato", ]
+num_tdTomato_reads <- nrow(tdTomato_reads)
+print(paste("Number of reads aligning to tdTomato sequence:", num_tdTomato_reads))
+```
+Yes, because tdTomato is a fluorophore, it would emit fluorescence under the appropriate excitation light.
+
+Adding a fluorophore like tdTomato allows researchers to visualize and track specific cells or gene expression under a microscope.
+
 ## Q5.1: 
 ```{r}
 vcf_con <- file("RNA_seq_annotated_variants.vcf", open="r")
