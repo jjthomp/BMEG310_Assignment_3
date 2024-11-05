@@ -294,3 +294,8 @@ colnames(df) <- col_names
 df
 ```
 
+##Q5.3: 
+The annotation field tells us that the variant is an intron. Therefore this part of the sequence does not code protein. 
+```{r}
+print(df$` Annotation `)
+```
