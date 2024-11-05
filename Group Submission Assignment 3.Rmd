@@ -345,3 +345,40 @@ for (j in 1:nrow(VCF_df)){
 #Gets a summary of the variant types
 data.frame(table(variant_types))
 ```
+
+### Q5.8
+```{r}
+high_impact_genes <- c()
+moderate_impact_genes <- c()
+
+for (i in 1:nrow(variants)) {
+  info_field <- as.character(variants$INFO[i])
+  info_parts <- strsplit(info_field, ";")[[1]]
+  ann_field <- info_parts[grep("^ANN=", info_parts)]
+
+  if (length(ann_field) > 0) {
+    ann_value <- sub("ANN=", "", ann_field)
+    annotations <- strsplit(ann_value, ",")[[1]]
+
+    for (annotation in annotations) {
+      annotation_details <- strsplit(annotation, "\\|")[[1]]
+      impact <- annotation_details[3]
+      gene_name <- annotation_details[4]
+      feature_type <- annotation_details[8]
+      
+      if (impact == "HIGH" && feature_type == "protein_coding") {
+        high_impact_genes <- c(high_impact_genes, gene_name)
+      }
+
+      if (impact == "MODERATE" && feature_type == "protein_coding") {
+        moderate_impact_genes <- c(moderate_impact_genes, gene_name)
+      }
+    }
+  }
+}
+unique_high_impact_genes <- unique(high_impact_genes)
+unique_moderate_impact_genes <- unique(moderate_impact_genes)
+
+cat("Unique genes affected by HIGH impact coding mutations:\n", unique_high_impact_genes, "\n\n")
+cat("Unique genes affected by MODERATE impact coding mutations:\n", unique_moderate_impact_genes, "\n")
+```
