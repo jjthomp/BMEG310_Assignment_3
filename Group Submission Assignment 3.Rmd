@@ -201,17 +201,17 @@ for (i in 1: number_of_reads){
 
 ### Q4.5.
 ```{r}
-library(ggplot2)
+#library(ggplot2)
 
-base_quality_read <- sam[sam[,3]=="X",]
+#base_quality_read <- sam[sam[,3]=="X",]
 
 #for(i in 1:100){
 #boxplot(unlist(mean_bq$Bq[i]))
 #}
-mean_bq$position <-sam$V4
-sam$V4
-order(mean_bq$Bq[1:100])
-data<-boxplot(mean_bq$Bq[1:100])
+#mean_bq$position <-sam$V4
+#sam$V4
+#order(mean_bq$Bq[1:100])
+#data<-boxplot(mean_bq$Bq[1:100])
 
 ```
 
@@ -245,7 +245,7 @@ mean_mapping_quality <- mean(mapping_quality_data$V5)
 print(paste("Mean Mapping Quality of Reads:", mean_mapping_quality))
 ```
 
-### Q4.10
+### Q4.10.
 ```{r}
 tdTomato_reads <- sam[sam$V3 == "tdTomato", ]
 num_tdTomato_reads <- nrow(tdTomato_reads)
@@ -255,7 +255,7 @@ Yes, because tdTomato is a fluorophore, it would emit fluorescence under the app
 
 Adding a fluorophore like tdTomato allows researchers to visualize and track specific cells or gene expression under a microscope.
 
-## Q5.1: 
+### Q5.1. 
 ```{r}
 vcf_con <- file("RNA_seq_annotated_variants.vcf", open="r")
 vcf_file <- readLines(vcf_con)
@@ -273,7 +273,7 @@ print(paste("The alternative allele: ", variants[1,"ALT"]))
 
 ```
 
-##Q5.2
+### Q5.2.
 ```{r}
 #Using the ANN line of the VCF file to get column names for the dataframe. 
 cols_divide <- strsplit(vcf[108,1], ":") #Isolate ANN line
@@ -295,13 +295,13 @@ colnames(df) <- col_names
 df
 ```
 
-##Q5.3: 
+### Q5.3. 
 The annotation field tells us that the variant is an intron. Therefore this part of the sequence does not code protein. 
 ```{r}
 print(df$` Annotation `) #prints the annotation field 
 ```
 
-##Q5.4
+### Q5.4.
 ```{r}
 variants$INFO <- as.character(variants$INFO)
 info <- strsplit(variants[683,8],"ANN") #getting the 683 line of the variant after ANN
@@ -316,3 +316,32 @@ colnames(df) <- col_names
 print(df$` Gene_Name `)
 ```
 
+### Q5.5.
+```{r}
+variant_types<-c()
+
+#Isolating the variant's info field
+VCF_df <- data.frame("INFO"=INFO_field)
+
+for (j in 1:nrow(VCF_df)){
+  
+  #Separates by | to get the ANN information
+  #[[1]] to access the value in the list
+  Initial_split <- strsplit(INFO_field[j], split=",")[[1]]
+
+  #Separates by ; to get individual variables
+  Second_split <- strsplit(Initial_split,"\\|")
+
+  #Goes through each variant file and separates by & to get individual variants
+  for(i in 1:length(Second_split)){
+    
+    split_variants <- unlist(strsplit(Second_split[[i]][2], "&"))
+
+    #Places the variant types in a vector
+    variant_types<-c(variant_types,split_variants)
+  }
+}
+
+#Gets a summary of the variant types
+data.frame(table(variant_types))
+```
