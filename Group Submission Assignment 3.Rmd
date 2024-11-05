@@ -8,7 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
+a
 Q1: Why areas of the genome with high GC content are hard to sequence?
 
 Areas in the genome with high G-C content are challenging to sequence because they have strong hydrogen bonds. These hydrogen bonds are stable, and therefore can form secondary structures. These structures do not respond to amplification, and therefore areas with high G-C content are challenging to accurately amplify. 
