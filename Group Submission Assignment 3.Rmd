@@ -149,7 +149,76 @@ LN: Reference Sequence Length
 print(paste("Length of X Chromosome:",single_cell_RNA_seq[single_cell_RNA_seq[,2]=="SN:X",3]))
 ```
 
-### Q4.1.
+## Q4. Looking at the Reads of an alignment (SAM) file
+
+### Q4.1. 
+```{r}
+sam <- read.csv("single_cell_RNA_seq_bam.sam", sep="\t", header=FALSE,
+comment.char="@", col.names = paste0("V",seq_len(30)), fill=TRUE)
+sam <- sam[paste0("V",seq_len(11))]
+
+print(paste("Number of Reads in the BAM file:", nrow(sam)))
+```
+
+### Q4.2. 
+```{r}
+print(sam[10,])
+print("To find the chromosome to which the read was aligned, we should look at the 3rd column")
+print("V11 corresponds to the the ASCII of the base quality plus 33")
+```
+
+### Q4.3.
+```{r}
+number_of_reads <- nrow(sam[sam[,3]=="X",])
+
+print(paste("Number of reads in the file that align to chromosome X:",number_of_reads))
+```
+
+### Q4.4.
+```{r Q4.4.}
+#Isolating the Base Quality Reads of X-Chromosome
+base_quality_read <- sam[sam[,3]=="X",]
+
+#Creating a Data Frame to store the converted values
+mean_bq <- data.frame("Read_Name:"=base_quality_read$V1)
+
+#Going through each read
+for (i in 1: number_of_reads){
+  
+  #Converting the ASCII Value into Base Quality
+  bq_indiv_read <- as.numeric(charToRaw(base_quality_read[i, 11])) - 33
+  
+  #Adds the converted values in the dataframe
+  mean_bq$Bq[i] <- I(list(bq_indiv_read))
+  
+  #Adds the mean base quality into the dataframe
+  mean_bq$Mean_Base_Quality[i] <- mean(bq_indiv_read)
+}
+
+ print(paste("Mean of the Reads:", mean(mean_bq$Mean_Base_Quality)))
+  
+```
+
+### Q4.5.
+```{r}
+library(ggplot2)
+
+base_quality_read <- sam[sam[,3]=="X",]
+
+#for(i in 1:100){
+#boxplot(unlist(mean_bq$Bq[i]))
+#}
+mean_bq$position <-sam$V4
+sam$V4
+order(mean_bq$Bq[1:100])
+data<-boxplot(mean_bq$Bq[1:100])
+
+```
+
+### Q4.6.
+The column that contains the leftmost mapping position of the reads is the POS column, found in the fourth column.
+
+### Q4.7.
 
 ## Q5.1: 
 ```{r}
@@ -161,6 +230,9 @@ header <- vcf[grepl("##", vcf$vcf_file), ]
 factor(header)
 variants <- read.csv("RNA_seq_annotated_variants.vcf", skip=length(header),
 header=TRUE, sep="\t")
+```
+```{r}
+
 ```
 
 The reference allele base at the site is G. 
