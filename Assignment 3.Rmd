@@ -1,0 +1,467 @@
+---
+title: "Assignment 3"
+author: "Zhipeng Ren"
+date: "2024-10-29"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+### Q1
+Regions of the genome with high GC content are difficult to sequence due to the strong bonding between guanine and cytosine, which form three hydrogen bonds, making them harder to denature. This increases the melting temperature of these areas and can cause secondary structures like hairpins, which interfere with sequencing enzymes. 
+
+### Q2
+```{r}
+seq1 <- "ATTCGAC"
+seq2 <- "ATCAC"
+
+gap_penalty <- -2
+
+scoring_matrix <- matrix(c(
+  1, -5, -5, -1,
+  -5, 1, -1, -5,
+  -5, -1, 1, -5,
+  -1, -5, -5, 1
+), nrow = 4, dimnames = list(c("A", "T", "C", "G"), c("A", "T", "C", "G")))
+
+num_rows <- nchar(seq1) + 1
+num_cols <- nchar(seq2) + 1
+matrix <- matrix(0, nrow = num_rows, ncol = num_cols)
+rownames(matrix) <- c("-", strsplit(seq1, "")[[1]])
+colnames(matrix) <- c("-", strsplit(seq2, "")[[1]])
+
+for (i in 2:num_rows) {
+  matrix[i, 1] <- matrix[i-1, 1] + gap_penalty
+}
+for (j in 2:num_cols) {
+  matrix[1, j] <- matrix[1, j-1] + gap_penalty
+}
+
+for (i in 2:num_rows) {
+  for (j in 2:num_cols) {
+    char1 <- rownames(matrix)[i]
+    char2 <- colnames(matrix)[j]
+    
+    match <- matrix[i-1, j-1] + scoring_matrix[char1, char2]
+    delete <- matrix[i-1, j] + gap_penalty
+    insert <- matrix[i, j-1] + gap_penalty
+    
+    matrix[i, j] <- max(match, delete, insert)
+  }
+}
+
+print("Scoring matrix with sequences:")
+print(matrix)
+
+alignment1 <- ""
+alignment2 <- ""
+i <- num_rows
+j <- num_cols
+
+while (i > 1 || j > 1) {
+  current_score <- matrix[i, j]
+  char1 <- if (i > 1) rownames(matrix)[i] else "-"
+  char2 <- if (j > 1) colnames(matrix)[j] else "-"
+  
+  if (i > 1 && j > 1 && current_score == matrix[i-1, j-1] + scoring_matrix[char1, char2]) {
+    alignment1 <- paste0(char1, alignment1)
+    alignment2 <- paste0(char2, alignment2)
+    i <- i - 1
+    j <- j - 1
+  } else if (i > 1 && current_score == matrix[i-1, j] + gap_penalty) {
+    alignment1 <- paste0(char1, alignment1)
+    alignment2 <- paste0("-", alignment2)
+    i <- i - 1
+  } else {
+    alignment1 <- paste0("-", alignment1)
+    alignment2 <- paste0(char2, alignment2)
+    j <- j - 1
+  }
+}
+
+cat("Final Alignment:\n")
+cat(alignment1, "\n")
+cat(alignment2, "\n")
+```
+matrix[1,1] (A vs. A):
+  Diagonal: matrix[0,0] + scoring_matrix["A", "A"] = 0 + 1 = 1
+  Left: matrix[1,0] + gap_penalty = -2 + (-2) = -4
+  Up: matrix[0,1] + gap_penalty = -2 + (-2) = -4
+  Result: max(1, -4, -4) = 1
+
+matrix[1,2] (A vs. T):
+  Diagonal: matrix[0,1] + scoring_matrix["A", "T"] = -2 + (-5) = -7
+  Left: matrix[1,1] + gap_penalty = 1 + (-2) = -1
+  Up: matrix[0,2] + gap_penalty = -4 + (-2) = -6
+  Result: max(-7, -1, -6) = -1
+
+matrix[1,3] (A vs. C):
+  Diagonal: matrix[0,2] + scoring_matrix["A", "C"] = -4 + (-5) = -9
+  Left: matrix[1,2] + gap_penalty = -1 + (-2) = -3
+  Up: matrix[0,3] + gap_penalty = -6 + (-2) = -8
+  Result: max(-9, -3, -8) = -3
+
+matrix[2,1] (T vs. A):
+  Diagonal: matrix[1,0] + scoring_matrix["T", "A"] = -2 + (-5) = -7
+  Left: matrix[2,0] + gap_penalty = -4 + (-2) = -6
+  Up: matrix[1,1] + gap_penalty = 1 + (-2) = -1
+  Result: max(-7, -6, -1) = -1
+
+matrix[2,2] (T vs. T):
+  Diagonal: matrix[1,1] + scoring_matrix["T", "T"] = 1 + 1 = 2
+  Left: matrix[2,1] + gap_penalty = -1 + (-2) = -3
+  Up: matrix[1,2] + gap_penalty = -1 + (-2) = -3
+  Result: max(2, -3, -3) = 2
+
+matrix[2,3] (T vs. C):
+  Diagonal: matrix[1,2] + scoring_matrix["T", "C"] = -1 + (-1) = -2
+  Left: matrix[2,2] + gap_penalty = 2 + (-2) = 0
+  Up: matrix[1,3] + gap_penalty = -3 + (-2) = -5
+  Result: max(-2, 0, -5) = 0
+
+matrix[3,1] (T vs. A):
+  Diagonal: matrix[2,0] + scoring_matrix["T", "A"] = -4 + (-5) = -9
+  Left: matrix[3,0] + gap_penalty = -6 + (-2) = -8
+  Up: matrix[2,1] + gap_penalty = -1 + (-2) = -3
+  Result: max(-9, -8, -3) = -3
+
+matrix[3,2] (T vs. T):
+  Diagonal: matrix[2,1] + scoring_matrix["T", "T"] = -1 + 1 = 0
+  Left: matrix[3,1] + gap_penalty = -3 + (-2) = -5
+  Up: matrix[2,2] + gap_penalty = 2 + (-2) = 0
+  Result: max(0, -5, 0) = 0
+
+matrix[3,3] (T vs. C):
+  Diagonal: matrix[2,2] + scoring_matrix["T", "C"] = 2 + (-1) = 1
+  Left: matrix[3,2] + gap_penalty = 0 + (-2) = -2
+  Up: matrix[2,3] + gap_penalty = 0 + (-2) = -2
+  Result: max(1, -2, -2) = 1
+
+
+### Q3
+## Q3.1
+```{r}
+sam_data <- read.csv("single_cell_RNA_seq_bam.sam", nrows = 73, sep = "\t", header = FALSE, fill = TRUE)
+
+print(sam_data)
+```
+SN (Reference sequence name): This tag specifies the name of the reference sequence.
+LN (Reference sequence length): This tag indicates the length of the reference sequence in base pairs.
+
+## Q3.2
+```{r}
+sequence_info <- sam_data[grep("@SQ", sam_data$V1), ]
+
+x_chr_line <- sequence_info[grep("SN:X", sequence_info$V2), ]
+
+print(x_chr_line)
+
+x_chr_length <- sub("LN:", "", x_chr_line$V3)
+print(paste("Length of X chromosome:", x_chr_length, "bp"))
+```
+
+### Q4
+
+## Q4.1
+```{r}
+sam <- read.csv("single_cell_RNA_seq_bam.sam", sep = "\t", header = FALSE, 
+                comment.char = "@", col.names = paste0("V", seq_len(30)), fill = TRUE)
+
+sam <- sam[paste0("V", seq_len(11))]
+
+num_reads <- nrow(sam)
+print(paste("Number of reads in the BAM file:", num_reads))
+```
+
+## Q4.2
+```{r}
+print(sam[10, ])
+```
+The chromosome corresponds to column V3 in the dataframe (RNAME field).
+V11 corresponds to the QUAL field in the SAM format, which provides quality scores for the read sequence.
+
+## Q4.3
+```{r}
+num_reads_chrX <- sum(sam$V3 == "X")
+print(paste("Number of reads aligning to chromosome X:", num_reads_chrX))
+```
+
+## Q4.4
+```{r}
+chrX_reads <- sam[sam$V3 == "X", ]
+
+qual_scores <- unlist(lapply(strsplit(chrX_reads$V11, ""), function(qual_string) {
+  sapply(qual_string, function(char) as.integer(charToRaw(char)) - 33)
+}))
+
+mean_base_quality <- mean(qual_scores)
+print(paste("Mean base quality for reads aligning to chromosome X:", mean_base_quality))
+```
+
+## Q4.5
+```{r}
+all_qual_scores <- unlist(lapply(strsplit(sam$V11, ""), function(qual_string) {
+  sapply(qual_string, function(char) as.integer(charToRaw(char)) - 33)
+}))
+
+boxplot(all_qual_scores, main = "Distribution of Base Qualities Across All Reads",
+        ylab = "Base Quality (Phred Score)", xlab = "All Bases",
+        col = "lightblue")
+```
+## Q4.6
+Referring to section 1.4 of the SAM/BAM documentation, the column that contains the leftmost mapping position of the reads is the 4th column, which is labeled POS
+
+## Q4.7
+```{r}
+start_pos <- 40801273
+end_pos <- 40805199
+
+reads_in_region <- sam[sam$V3 == "9" & sam$V4 >= start_pos & sam$V4 <= end_pos, ]
+
+num_reads_in_region <- nrow(reads_in_region)
+print(paste("Number of reads aligning to chromosome 9 within specified coordinates:", num_reads_in_region))
+```
+
+## Q4.8
+```{r}
+low_quality_reads <- sam[sam$V5 < 50, ]
+num_low_quality_reads <- nrow(low_quality_reads)
+print(paste("Number of reads with mapping quality less than 50:", num_low_quality_reads))
+```
+
+## Q4.9
+```{r}
+mean_mapping_quality <- mean(low_quality_reads$V5)
+print(paste("Mean mapping quality for reads with MAPQ < 50:", mean_mapping_quality))
+```
+
+## Q4.10
+```{r}
+tdTomato_reads <- sam[sam$V3 == "tdTomato", ]
+num_tdTomato_reads <- nrow(tdTomato_reads)
+print(paste("Number of reads aligning to tdTomato sequence:", num_tdTomato_reads))
+```
+Yes, because tdTomato is a fluorophore, it would emit fluorescence under the appropriate excitation light.
+
+Adding a fluorophore like tdTomato allows researchers to visualize and track specific cells or gene expression under a microscope.
+
+### Q5
+
+##Q5.1
+```{r}
+vcf_con <- file("RNA_seq_annotated_variants.vcf", open="r")
+vcf_file <- readLines(vcf_con)
+close(vcf_con)
+vcf <- data.frame(vcf_file)
+header <- vcf[grepl("##", vcf$vcf_file), ]
+factor(header)
+variants <- read.csv("RNA_seq_annotated_variants.vcf", skip=length(header),
+header=TRUE, sep="\t")
+```
+
+```{r}
+reference_allele <- variants[1, "REF"]
+alternative_allele <- variants[1, "ALT"]
+
+print(paste("Reference allele for the first variant:", reference_allele))
+print(paste("Alternative allele for the first variant:", alternative_allele))
+```
+
+## Q5.2
+```{r}
+info_field <- as.character(variants[1, "INFO"])
+
+info_parts <- strsplit(info_field, ";")[[1]]
+
+ann_info <- info_parts[grep("^ANN=", info_parts)]
+
+print(paste("ANN info for the first variant:", ann_info))
+```
+
+## Q5.3
+```{r}
+ann_part <- info_parts[grep("^ANN=", info_parts)]
+ann_value <- strsplit(sub("ANN=", "", ann_part), ",")[[1]][1]
+
+annotation_details <- strsplit(ann_value, "\\|")[[1]]
+
+alt_allele <- annotation_details[1]
+effect <- annotation_details[2]
+impact <- annotation_details[3]
+feature_type <- annotation_details[6]
+
+cat("Alternate Allele:", alt_allele, "\n")
+cat("Effect:", effect, "\n")
+cat("Impact:", impact, "\n")
+cat("Feature Type:", feature_type, "\n")
+```
+
+## Q5.4
+```{r}
+variant_683 <- variants[683, ]
+
+info_683 <- as.character(variant_683$INFO)
+
+info_parts_683 <- strsplit(info_683, ";")[[1]]
+
+ann_field_683 <- info_parts_683[grep("^ANN=", info_parts_683)]
+
+ann_values_683 <- strsplit(sub("ANN=", "", ann_field_683), ",")[[1]][1]
+
+annotation_details_683 <- strsplit(ann_values_683, "\\|")[[1]]
+gene_name_683 <- annotation_details_683[4]
+
+cat("The gene affected by this variant is:", gene_name_683, "\n")
+```
+
+## Q5.5
+```{r}
+library(dplyr)
+
+variant_types <- c()
+
+for (i in 1:nrow(variants)) {
+  info_field <- as.character(variants$INFO[i])
+
+  info_parts <- strsplit(info_field, ";")[[1]]
+
+  ann_field <- info_parts[grep("^ANN=", info_parts)]
+
+  if (length(ann_field) > 0) {
+    ann_value <- sub("ANN=", "", ann_field)
+    annotations <- strsplit(ann_value, ",")[[1]]
+
+    for (annotation in annotations) {
+      annotation_details <- strsplit(annotation, "\\|")[[1]]
+      variant_type <- annotation_details[2]
+      variant_types <- c(variant_types, variant_type)
+    }
+  }
+}
+
+variant_df <- data.frame(variant_type = variant_types)
+
+variant_counts <- variant_df %>%
+  count(variant_type, name = "count") %>%
+  arrange(desc(count))
+
+print(variant_counts)
+```
+
+## Q5.6
+A frameshift variant is a type of genetic mutation that involves the insertion or deletion of a number of nucleotides that is not a multiple of three in a DNA sequence. Frameshift variants generally have a greater effect on the resultant protein than missense variants. In a missense mutation, only a single amino acid is altered due to a single nucleotide substitution, which might affect protein function to a variable degree but often retains some functional parts of the protein. In contrast, frameshift mutations usually lead to a nonfunctional protein or an entirely different sequence after the mutation point, causing more severe disruptions in the protein's function.
+
+## Q5.7
+```{r}
+intronic_count <- 0
+total_count <- nrow(variants)
+
+for (i in 1:total_count) {
+  if (grepl("intron", variants$INFO[i], ignore.case = TRUE)) {
+    intronic_count <- intronic_count + 1
+  }
+}
+
+cat("Total number of variants:", total_count, "\n")
+cat("Number of potential intronic variants:", intronic_count, "\n")
+cat("Percentage of intronic variants:", (intronic_count / total_count) * 100, "%\n")
+```
+
+This suggests that a significant majority of the variants are located within intronic regions.
+
+## Q5.8
+```{r}
+high_impact_genes <- c()
+moderate_impact_genes <- c()
+
+for (i in 1:nrow(variants)) {
+  info_field <- as.character(variants$INFO[i])
+  info_parts <- strsplit(info_field, ";")[[1]]
+  ann_field <- info_parts[grep("^ANN=", info_parts)]
+
+  if (length(ann_field) > 0) {
+    ann_value <- sub("ANN=", "", ann_field)
+    annotations <- strsplit(ann_value, ",")[[1]]
+
+    for (annotation in annotations) {
+      annotation_details <- strsplit(annotation, "\\|")[[1]]
+      impact <- annotation_details[3]
+      gene_name <- annotation_details[4]
+      feature_type <- annotation_details[8]
+      
+      if (impact == "HIGH" && feature_type == "protein_coding") {
+        high_impact_genes <- c(high_impact_genes, gene_name)
+      }
+
+      if (impact == "MODERATE" && feature_type == "protein_coding") {
+        moderate_impact_genes <- c(moderate_impact_genes, gene_name)
+      }
+    }
+  }
+}
+unique_high_impact_genes <- unique(high_impact_genes)
+unique_moderate_impact_genes <- unique(moderate_impact_genes)
+
+cat("Unique genes affected by HIGH impact coding mutations:\n", unique_high_impact_genes, "\n\n")
+cat("Unique genes affected by MODERATE impact coding mutations:\n", unique_moderate_impact_genes, "\n")
+```
+
+## Q5.9
+For insertions longer than 60 bp, the issue arises because the sequencing reads themselves are only about 60 bp in length. When an insertion is larger than the read length, a single read cannot span both the insertion and the adjacent sequence on either side. This makes it difficult for Strelka and similar tools to accurately detect or align these longer insertions, as they rely on observing the insertion within a single read or from overlapping reads that cover the entire indel region. Therefore, for insertions longer than the read length, detection becomes less reliable.
+
+
+## Q5.10
+```{r}
+vaf_values <- c()
+is_coding_region <- c()
+
+for (i in 1:nrow(variants)) {
+  format_field <- as.character(variants$FORMAT[i])
+  sample_field <- as.character(variants$ws20171223_MPs_tomatoMuscle8wkQuiescent201[i])
+
+  ad_index <- which(strsplit(format_field, ":")[[1]] == "AD")
+  if (length(ad_index) > 0) {
+    ad_values <- as.numeric(strsplit(strsplit(sample_field, ":")[[1]][ad_index], ",")[[1]])
+    if (length(ad_values) == 2) {
+      vaf_values <- c(vaf_values, ad_values[2] / sum(ad_values))
+    } else {
+      vaf_values <- c(vaf_values, NA)
+    }
+  } else {
+    vaf_values <- c(vaf_values, NA)
+  }
+ 
+  ann_field <- strsplit(as.character(variants$INFO[i]), ";")[[1]]
+  ann_field <- ann_field[grep("^ANN=", ann_field)]
+  is_coding <- FALSE
+  if (length(ann_field) > 0) {
+    annotations <- strsplit(sub("ANN=", "", ann_field), ",")[[1]]
+    for (annotation in annotations) {
+      annotation_details <- strsplit(annotation, "\\|")[[1]]
+      impact <- annotation_details[3]
+      feature_type <- annotation_details[8]
+      if (impact %in% c("HIGH", "MODERATE") && feature_type == "protein_coding") {
+        is_coding <- TRUE
+        break
+      }
+    }
+  }
+  is_coding_region <- c(is_coding_region, is_coding)
+}
+
+vaf_df <- data.frame(VAF = vaf_values, CodingRegion = is_coding_region)
+
+vaf_above_5 <- vaf_df %>% filter(VAF > 0.05)
+
+total_variants_above_5 <- nrow(vaf_above_5)
+coding_variants_above_5 <- nrow(vaf_above_5 %>% filter(CodingRegion == TRUE))
+
+cat("Total variants with VAF > 5%:", total_variants_above_5, "\n")
+cat("Variants with VAF > 5% in coding regions:", coding_variants_above_5, "\n")
+
+library(ggplot2)
+ggplot(vaf_df, aes(x = "", y = VAF)) +
+  geom_boxplot() +
+  labs(title = "VAF Distribution Across All Variants", y = "VAF")
+```
+
