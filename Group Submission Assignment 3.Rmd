@@ -266,12 +266,12 @@ factor(header)
 variants <- read.csv("RNA_seq_annotated_variants.vcf", skip=length(header),
 header=TRUE, sep="\t")
 ```
+
 ```{r}
+print(paste("The reference allele: ", variants[1,"REF"]))
+print(paste("The alternative allele: ", variants[1,"ALT"]))
 
 ```
-
-The reference allele base at the site is G. 
-The alternative allele is A.
 
 ##Q5.2
 ```{r}
@@ -293,3 +293,4 @@ colnames(df) <- col_names
 
 df
 ```
+
