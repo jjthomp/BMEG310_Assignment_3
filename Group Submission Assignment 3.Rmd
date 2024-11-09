@@ -1,11 +1,15 @@
 ---
 title: "Assignment 3 File"
-author: "Group 15: Jordan Thompson, Arabela Tan, Zhipeng Ren"
+author: 'Group 15: Jordan Thompson, Arabela Tan, Zhipeng Ren'
 date: "2024-11-05"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
 ---
-Setting working directory
 ```{r setup, include=FALSE}
+#Setting working directory
 knitr::opts_knit$set(root.dir = "/Users/arabelatan/Desktop/[1] UBC/[3] Third Year/[1] First Term/BMEG 310/[3] Group Projects/Assignment 3")
 ```
 
@@ -14,9 +18,8 @@ knitr::opts_knit$set(root.dir = "/Users/arabelatan/Desktop/[1] UBC/[3] Third Yea
 Areas in the genome with high G-C content are challenging to sequence because they have strong hydrogen bonds. These hydrogen bonds are stable, and therefore can form secondary structures. These structures do not respond to amplification, and therefore areas with high G-C content are challenging to accurately amplify. 
 
 ## Q2
-![Alt text](https://raw.githubusercontent.com/jjthomp/BMEG310_Assignment_3/blob/beacc4781d518235528ce43ad58cf848000e0bea/IMG_0525.jpg)
-
-
+![Alt text](IMG_0525.jpg){ width=85% }
+\\
 
 ## Q3. Looking at the Metadata of an alignment (SAM) file
 
@@ -204,6 +207,9 @@ print(df$` Gene_Name `)
 ### Q5.5.
 ```{r}
 variant_types<-c()
+
+#Converting into character
+INFO_field <- as.character(variants[,"INFO"])
 
 #Isolating the variant's info field
 VCF_df <- data.frame("INFO"=INFO_field)
