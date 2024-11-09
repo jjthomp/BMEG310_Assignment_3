@@ -1,0 +1,526 @@
+---
+title: "Assignment 3"
+author: "Arabela Tan"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Setting working directory
+```{r}
+setwd("/Users/arabelatan/Desktop/[1] UBC/[3] Third Year/[1] First Term/BMEG 310/[3] Group Projects/Assignment 3") 
+```
+
+# Q1. Sequencing technologies-> Why areas of the genome with high GC content are hard to sequence?
+
+# Q2. Global alignment exercise
+Similar to the approach for Needleman–Wunsch algorithm, find the best global alignment
+between the two following sequences:
+
+ATTCGAC
+ATCAC
+
+Use a gap penalty of -2 and the following scoring matrix:
+
+In your answer, please include the grid table (used for storing the scores and traceback) and also
+include how you calculated the first top-left 9 elements of the table.
+```{r}
+#Function that assigns what point to be used depending if the letters match or not
+verdict <- function(first_letter, second_letter){
+  
+  #Mismatch Score
+  if(first_letter==second_letter){
+    point <- 1
+  }else{
+    if((first_letter=="A" || first_letter=="G") && (second_letter=="G" || second_letter=="A")){
+    point <- - 1
+    }else if((first_letter=="T" || first_letter=="C") && (second_letter=="C" || second_letter=="T")){
+    point <- -1 
+    }
+    else{
+    point <- -5 
+    }
+  }
+  return (point)
+}
+
+# scoring_matrix
+Needleman_Wunsch_Algorithmn <- function(first_sequence,second_sequence){
+  
+  #Separating the string into individual characters
+  sequence1<-unlist(strsplit(first_sequence,""))
+  sequence2<-unlist(strsplit(second_sequence,""))
+  
+  #Creating an empty matrix
+  scoring_matrix<-matrix(0,nrow=length(sequence2)+2,ncol=length(sequence1)+2)
+
+  #Setting the gap value
+  gap <- -2
+
+  #Setting up the horizontal gap values
+  for(i in 1:length(sequence1)+1){
+    scoring_matrix[2,i+1]<- scoring_matrix[2,i] + gap
+  }
+
+  #Setting up the vertical gap values
+  for(j in 1:length(sequence2)+1){
+    scoring_matrix[j+1,2]<- scoring_matrix[j,2] + gap
+  }
+
+  #Calculates the scoring matrix
+  for(i in 3:(length(sequence2)+2)){
+    for(j in 3:(length(sequence1)+2)){
+      diagonal <- scoring_matrix[i-1,j-1] + verdict(sequence1[j-2],sequence2[i-2])
+      up_score <- scoring_matrix[i-1,j] + gap
+      left_score <- scoring_matrix[i,j-1] + gap
+      scoring_matrix[i,j]<-max(diagonal,up_score,left_score)
+    }
+  }
+
+  #Inputs the Sequence 1 and Sequence 2 into the matrix
+  scoring_matrix[1, 3:(length(sequence1)+2)] <- sequence1
+  scoring_matrix[3:(length(sequence2)+2),1] <- sequence2
+
+  return(scoring_matrix)
+}
+
+scoring_matrix<-Needleman_Wunsch_Algorithmn("ATTCGAC","ATCAC")
+
+Alignment<-function(scoring_matrix){
+  
+  seq1_alignmnet<-c()
+  seq2_alignment<-c()
+    
+  j <- ncol(scoring_matrix)
+  i <- nrow(scoring_matrix)
+
+  while(i>2 && j>2){
+      if(scoring_matrix[i,1]==scoring_matrix[1,j]){
+  
+        seq1_alignmnet <- c(scoring_matrix[1, j],seq1_alignmnet )
+        seq2_alignment <- c(scoring_matrix[i, 1],seq2_alignment)
+        i <- i-1
+        j <- j-1
+        
+      }else{
+        
+        left_value<-scoring_matrix[i,j-1]
+        up_value<-scoring_matrix[i-1,j]
+        diagonal_value<-scoring_matrix[i-1,j-1]
+        max_val<-max(left_value,up_value,diagonal_value)
+        
+        if(max_val==left_value){
+          seq2_alignment <- c("-", seq2_alignment)
+          seq1_alignmnet <- c(scoring_matrix[1, j], seq1_alignmnet)
+          j <- j-1
+        }else if(max_val==up_value){
+          seq2_alignment <- c(scoring_matrix[i, 1], seq2_alignment)
+          seq1_alignmnet <- c("-", seq1_alignmnet)
+          i<-i-1
+        }else{
+          seq2_alignment <- c(scoring_matrix[1, j - 1], seq2_alignment)
+          seq1_alignmnet <- c(scoring_matrix[i - 1, 1], seq1_alignmnet)
+          i<-i-1
+          j<-j-1
+        }
+      }
+  }
+  print(paste("Aligned Sequence 1:", paste(seq1_alignmnet, collapse = "")))
+  print(paste("Aligned Sequence 2:", paste(seq2_alignment, collapse = "")))
+}
+Alignment(Needleman_Wunsch_Algorithmn("ATTCGAC","ATCAC"))
+scoring_matrix
+
+```
+**Alignment:**
+
+ATTCGAC
+A-TC-AC
+
+## Q3. Looking at the Metadata of an alignment (SAM) file
+
+### Q3.1.
+```{r}
+single_cell_RNA_seq <- read.csv("single_cell_RNA_seq_bam.sam", nrows=73, sep="\t", header=FALSE,
+fill=TRUE)
+```
+
+SN: Reference Sequence Name
+LN: Reference Sequence Length
+
+### Q3.2.
+
+A sequence is any template string of bases to which we can align a read. This includes
+chromosomes (which are continuous sequences of bases) and new strings resulting from genetic
+modifications. What is the length of the X chromosome, in bp, for our alignment?
+```{r}
+print(paste("Length of X Chromosome:",single_cell_RNA_seq[single_cell_RNA_seq[,2]=="SN:X",3]))
+```
+
+
+## Q4. Looking at the Reads of an alignment (SAM) file
+
+### Q4.1. 
+```{r}
+sam <- read.csv("single_cell_RNA_seq_bam.sam", sep="\t", header=FALSE,
+comment.char="@", col.names = paste0("V",seq_len(30)), fill=TRUE)
+sam <- sam[paste0("V",seq_len(11))]
+
+print(paste("Number of Reads in the BAM file:", nrow(sam)))
+```
+
+### Q4.2.
+
+
+Print out the 10th row of the dataframe to look at the format of a read. Compare it to the
+mandatory BAM fields table in section 1.4 of the SAM/BAM documentation in the appendix. The
+order of columns in the bam file have been preserved in the dataframe. Which column of
+your dataframe should you look at to find the chromosome to which the read was aligned? To
+which BAM data field does the dataframe column "V11" correspond?
+
+```{r}
+print(sam[10,])
+print("To find the chromosome to which the read was aligned, we should look at the 3rd column")
+print("V11 corresponds to the the ASCII of the base quality plus 33")
+```
+
+### Q4.3. How many reads in this file align to chromosome X?
+
+*Hint: You can compare a column vector to a constant using logical symbols (==, <, >, etc.) to get a*
+*column vector of TRUE or FALSE. Remember, when summing, a true symbol is worth "1" while a*
+*false symbol is worth "0".*
+```{r}
+number_of_reads <- nrow(sam[sam[,3]=="X",])
+
+print(paste("Number of reads in the file that align to chromosome X:",number_of_reads))
+```
+
+### Q4.4. What is the mean base quality (BQ) for reads aligning to chromosome X?
+[Link] https://www.geeksforgeeks.org/convert-character-value-to-ascii-value-in-r-programming-chartoraw-function/
+
+[Link] https://search.r-project.org/CRAN/refmans/gtools/html/asc.html
+
+
+#converting the character into it's ASCII Value
+#charToRaw('A')
+#base_quality <- nrow(sam[sam[,3]=="X",])
+#Q <- sam[sam[,3]=="X",]$V11[1]
+
+```{r Q4.4.}
+#Isolating the Base Quality Reads of X-Chromosome
+base_quality_read <- sam[sam[,3]=="X",]
+
+#Creating a Data Frame to store the converted values
+mean_bq <- data.frame("Read_Name:"=base_quality_read$V1)
+
+#Going through each read
+for (i in 1: number_of_reads){
+  
+  #Converting the ASCII Value into Base Quality
+  bq_indiv_read <- as.numeric(charToRaw(base_quality_read[i, 11])) - 33
+  
+  #Adds the converted values in the dataframe
+  mean_bq$Bq[i] <- I(list(bq_indiv_read))
+  
+  #Adds the mean base quality into the dataframe
+  mean_bq$Mean_Base_Quality[i] <- mean(bq_indiv_read)
+}
+  
+```
+
+
+### Q4.5. Plot the distribution of BQs across all bases and reads as a boxplot. Comment on your
+observation.
+Hint: This is similar to a boxplots that was provided in the lecture related to primary analysis.
+
+```{r}
+
+boxplot(mean_bq$Bq, names = mean_bq$position,
+        main = "Boxplot of Bq per Position",
+        xlab = "Position", ylab = "Bq",
+        col = "tomato", border = "black",
+        las = 2,         # Make x-axis labels vertical
+        lwd = 0.2) 
+
+```
+
+### Q4.6. Referring to section 1.4 of the SAM/BAM documentation, what column contains the leftmost mapping position of the reads?
+
+The column that contains the leftmost mapping position of the reads is the POS column, found in the fourth column.
+
+### Q4.7. In order to transform a BAM file into expression levels for each gene, we need to count the number of reads covering a particular location or gene. The protein Hspa8 is located on chromosome 9 at bases 40801273 - 40805199. How many reads have their leftmost mapping position aligned within these coordinates? Hint: you can implement AND logic on two column vectors with "&".
+
+```{r}
+#Number of reads that have their leftmost mapping position aligned with the coordinates
+#Includes other chromosomes (Not sure if all or just chromosome 9)
+nrow(sam[sam[4]>40801273 & sam[4]<40805199,])
+```
+
+### Q4.8. Mapping quality is an indication of how well a read aligned to the reference genome during the alignment step of processing our library data. It is reported as an integer between 0 and 255.How many reads have mapping quality less than 50?
+
+```{r}
+
+#Number of reads that have mapping quality less than 50
+mq_less50 <-nrow(sam[sam[5]<50,])
+
+print(paste("Number of reads that have mapping quality of less than 50:", mq_less50 ))
+
+```
+
+
+### Q4.9. What is the mean mapping quality of the reads which have mapping quality less than 50? Hint: you can obtain a subset of a dataframe by using df[bool_vec,] where bool_vec contains TRUE/FALSE elements and bool_vec and df have the same number of rows.
+
+```{r}
+#Isolates the reads with mapping quality of less than 50
+mapping_quality_data <- sam[sam$V5 < 50, ]
+
+# Calculate the mean mapping quality for this subset
+mean_mapping_quality <- mean(mapping_quality_data$V5)
+
+#Prints the result
+print(paste("Mean Mapping Quality of Reads:", mean_mapping_quality))
+```
+
+### Q4.10. (bonus): The genome of the mouse used in this experiment has been edited to include the DNA sequence for the protein 'tdTomato', which is a fluorophore. Count the number of reads which align to the tdTomato sequence. Assuming that these reads are accurate, would you expect this cell to emit fluorescently? What might be the purpose of modifying a genome to include a fluorophore? Hint: Think about studying cell populations under a microscope.
+
+## Q5. Investigating the Variants
+
+### Q5.1. Use the following lines of code to obtain the header of the file and a dataframe where each row is a variant. As you can see, information in the VCF file is organised by multiple levels of character-separated data, so it will take multiple rounds of parsing to extract relevant information. For the first variant (row) in the dataframe, what is the reference allele base at the site, and what is the alternative allele called by Strelka? *Hint: Take a look at the VCF Variant Call Format document in the appendix for details on each column name.*
+
+```{r}
+vcf_con <- file("RNA_seq_annotated_variants.vcf", open="r")
+vcf_file <- readLines(vcf_con)
+close(vcf_con)
+vcf <- data.frame(vcf_file)
+header <- vcf[grepl("##", vcf$vcf_file), ]
+factor(header)
+variants <- read.csv("RNA_seq_annotated_variants.vcf", skip=length(header),
+header=TRUE, sep="\t")
+```
+
+For the first variant (row) in the dataframe, what is the reference allele base at the
+site, and what is the alternative allele called by Strelka?
+
+```{r}
+print(paste("The reference allele: ", variants[1,"REF"]))
+print(paste("The alternative allele: ", variants[1,"ALT"]))
+```
+
+### Q5.2. The INFO field is organised into variables by the form 'TAG=value' (see the VCF Variant Call Format document). Write code to obtain the entirety of the ANN info value contents from the INFO field for the first variant. *Hint: You will need strsplit() and grep()/grepl() to accomplish this. Take a look at https://www.math.ucla.edu/~anderson/rw1001/library/base/html/strsplit.html and https://stackoverflow.com/questions/21311386/using-grep-to-help-subset-a-data-frame-in-r for how to make use of them.* With which character should you split the string?*Hint: Make sure to convert the INFO field entry to string format using as.character() so that it can be passed into strsplit().*
+
+```{r}
+#Converting into character
+INFO_field <- as.character(variants[,"INFO"])
+
+#Creating an empty data frame to store the ANN Files
+ANN_df <- data.frame("INFO"=INFO_field) 
+
+#Goes through each field and extracts the ANN information
+for(i in 1:nrow(ANN_df)){
+#Separates by | to get the ANN information
+Initial_split <- strsplit(INFO_field[i], split="\\|")[[1]]
+
+#Separates by ; to get individual variables
+Second_split <- strsplit(Initial_split,";")[[1]]
+
+#Searches for the ANN information
+value <- grep("ANN",Second_split, ignore.case=TRUE, value=TRUE)
+
+#Stores the ANN file in a data frame
+ANN_df$ANN[i]<-value
+}
+
+ANN_df$ANN[1] 
+
+print("We splitted the strings by these two characters | ;")
+
+```
+
+
+### Q5.3. Each INFO tag-value pair is detailed in a line of the header, beginning with the tag '##INFO= <ID=VARIABLE, ...'. Look for the header entry starting with '##INFO=<ID=ANN, ...' which details the format of the ANN value contents. This tag-value pair contains the results of the annotations found by snpEff. Based on the ANN value of the first variant, what does the 'Annotation' field tell us about this variant? *Hint: snpEff can return multiple annotation entries for the same variant because some variants may have multiple possible effects. The first annotation entry is the most confident/important and, resultantly, you should only look at the first entry to answer this and all subsequent question. You can use strsplit() again with ',' separation character if you wish to look at each of the ANN entries separately.* *Hint: Refer to the snpEff documentation in the appendix for a list of snpEff annotation label names and summaries of their effects.*
+
+```{r}
+
+#Viewing the format of the ANN value
+format <- grep("##INFO=<ID=ANN,",header, ignore.case=TRUE, value=TRUE)
+grep("##INFO=<ID=ANN,",header, ignore.case=TRUE, value=TRUE) 
+
+#gets the first filed of annotation
+annotation_field <- strsplit(as.character(variants$INFO[1]),",")[[1]]
+
+print(strsplit(annotation_field,"\\|")[[1]][-1])
+
+```
+
+### Q5.4. Perform the parsing done in Q5.1-3 again on variant line 683. What gene would this variant affect?
+```{r}
+#Converting into character
+INFO_field <- as.character(variants[,"INFO"])
+
+#Separates by | to get the ANN information
+Initial_split <- strsplit(INFO_field[683], split="\\|")[[1]]
+
+#Separates by ; to get individual variables
+Second_split <- strsplit(Initial_split,";")[[1]]
+
+#Searches for the ANN information
+value <- grep("ANN",Second_split, ignore.case=TRUE, value=TRUE)
+
+#gets the first filed of annotation
+annotation_field <- strsplit(as.character(variants$INFO[683]),",")[[1]]
+
+gene_separation <- strsplit(as.character(variants$INFO[683][1]),"\\|")[[1]]
+
+print(paste("Gene Name:",gene_separation[4]))
+
+```
+
+### Q5.5. Within the entire VCF file, how many variants (in total) do we have per type (synonymous/nonsynonymous SNVs, frameshift indels, etc.)?
+
+```{r}
+#Vector containing the variants
+variant_types<-c()
+
+#Isolating the variant's info field
+VCF_df <- data.frame("INFO"=INFO_field)
+
+for (j in 1:nrow(VCF_df)){
+  
+  #Separates by , to get the ANN information
+  #[[1]] to access the value in the list
+  Initial_split <- strsplit(INFO_field[j], split=",")[[1]]
+
+  #Separates by | to get individual variables
+  Second_split <- strsplit(Initial_split,"\\|")
+  
+  #Goes through each variant file and separates by & to get individual variants
+  for(i in 1:length(Second_split)){
+    
+    split_variants <- unlist(strsplit(Second_split[[i]][2], "&"))
+
+    #Places the variant types in a vector
+    variant_types<-c(variant_types,split_variants)
+  }
+}
+
+#Gets a summary of the variant types
+summary_table <- as.data.frame(table(variant_types))
+summary_df_sorted <- summary_table[order(summary_table$Freq, decreasing = TRUE), ]
+summary_df_sorted
+```
+
+### Q5.6. What is a frameshift variant? Does it have a greater or lesser effect on the resultant protein than a missense variant? Why?
+
+Frameshift variants are mutations in the gene where a base is either added or removed from the sequence. Missense variant is when a base is substituted altering the sequence. 
+
+### Q5.7. We can divide variants into two broad categories: intronic/intergenic and exonic. Count the number of potential intronic variants. What do you notice about the number of intronic variants (compared to overall number of variants)? *Hint: Use grepl() on the INFO field to look for tell-tale tags.* *Hint: assume no overlap between exonic and intronic tags within a variant entry.*
+```{r}
+
+
+#current process
+print(paste("Intronic/Intergenic: ", sum(grepl("intronic|intergenic|intron", VCF_df$INFO))))
+print(paste("Exonic:", sum(grepl("exonic|exon", VCF_df$INFO))))
+print(paste("Total Variants:", sum(summary_table$Freq)))
+print("There are less intronic variants as compared to the total variant size. It's approximately 16.59811  times the total variant. ")
+
+```
+
+#Previous Process
+length(variant_types[grepl("intronic|intergenic|intron",variant_types)])
+length(variant_types[grepl("exon|exonic",variant_types)])
+
+### Q5.8. List all the genes that have been affected by coding mutations and have high impact. What do you find that is interesting? *Hint: You can use SNPeff HIGH/MODERATE impact field to help you finding those genes.*
+
+```{r}
+#Vector containing the variants
+variant_types<-c()
+high_gene <- c()
+moderate_gene <- c()
+
+#Isolating the variant's info field
+VCF_df <- data.frame("INFO"=INFO_field)
+
+for (j in 1:nrow(VCF_df)){
+  
+  #Separates by , to get the ANN information
+  #[[1]] to access the value in the list
+  Initial_split <- strsplit(VCF_df[j,], split=",")[[1]]
+
+  #Separates by | to get individual variables
+  Second_split <- strsplit(Initial_split,"\\|")[[1]]
+  
+  #Goes through each variant file and separates by & to get individual variants
+  if(length(grep("HIGH",VCF_df[j,]))>0 && !is.null(Second_split[4])){
+    high_gene <- c(high_gene,Second_split[4])
+  }else if (length(grep("MODERATE",VCF_df[j,]))>0 && !is.null(Second_split[4])){
+    moderate_gene <- c(moderate_gene,Second_split[4])
+  }
+}
+
+#Placing the unique genes affected by high impact in the data frame
+high_df <- data.frame(HIGH=unique(high_gene))
+
+#Placing the unique genes affected by moderate impact in the data frame
+moderate_df <- data.frame(MODERATE=unique(moderate_gene))
+
+high_df
+moderate_df 
+
+ 
+```
+
+From the results, we can see that there are more genes that have moderate impact as compared to high impact. 
+
+### Q5.9. (bonus): Using Strelka on our data, we can detect indels, but only to a limited extent. Most of the reads in our BAM file have read lengths around 60bp long. Why might this have consequences for the detection of insertions that are longer than 60bp?
+
+Strelka's limited capabilities of reading indels will mean it will not be able to read insertions outside the 60bp constraints. Therefore, it can't read insertions exceeding the 60bp. 
+
+### Q5.10. Variant Allele Frequency (VAF) is an important metric that helps us to measure how many DNA molecules in a given sample are carrying a given variant. It also helps to identify potential false-positive situations caused by incorrect base calls or alignment. VAF is calculated by the number of variant alleles /(The number of Variant alleles + The number of Reference alleles) In the form of a boxplot, plot the distribution of the VAFs across all the variants. How many variants have VAF > 5%? How many of those variants (the ones with >5% VAF) are in coding regions? *Hint: You will need to parse the genotype encoding field (GT:GQ:GQX:DP:DPF...) to get allele counts and then get VAF. To understand that column, look at the VCF Variant Call Format Document (GATK) section 5.*
+
+```{r}
+#Creating empty vectors
+REF_vector <- c()
+ALT_vector <- c()
+
+#Collects the AD field (representing the counts of reference and alternative alleles)
+for (i in 1:nrow(variants)){
+  
+  #Gets the Whole field
+  AD_extraction <- variants$ws20171223_MPs_tomatoMuscle8wkQuiescent201[i]
+  
+  #Extracts the AD field
+  isolation_1<- strsplit(AD_extraction, split=":")[[1]][6]
+  
+  #Separates the AD field into reference and alternative alleles
+  isolation_2 <- strsplit(isolation_1, split=",")
+  
+  #Places the reference allele into a vector
+  REF_vector <- append(REF_vector,as.numeric(isolation_2[[1]][1]))
+  
+  #Places the alternative allele into a vector
+  ALT_vector <- append(ALT_vector,as.numeric(isolation_2[[1]][2]))
+}
+
+#Creates a dataframe to store VAF
+VAF_df <- data.frame(Reference=REF_vector, Variant = ALT_vector, Coding_region = variants$INFO)
+
+#Calculates VAF of each row and adds to the dataframe
+for (i in 1:nrow(VAF_df)){
+  VAF_df$VAF[i] <- sum(VAF_df[i,2])/(sum(VAF_df[i,2]) + sum(VAF_df[i,1]))
+}
+
+#Plots the boxplot distribution
+boxplot(VAF_df$VAF, main="Boxplot Distribution of VAFs across all the variants")
+
+#Pastes the number of variants that have VAF of greater than 5%
+print(paste("Number of variants that have VAF > 5%:", length(VAF_df[VAF_df$VAF > 0.05,3])))
+   
+#Only checking the ones that are in the coding region   
+coding_region <- VAF_df[grepl("coding", VAF_df),]
+print(paste("Number of variants in the coding region that have VAF > 5%:", length(coding_region[coding_region$VAF > 0.05,3])))
+
+```
+
