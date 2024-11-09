@@ -7,7 +7,7 @@ output:
 ---
 ```{r setup, include=FALSE}
 #Setting working directory
-knitr::opts_knit$set(root.dir = "/Users/arabelatan/Desktop/[1] UBC/[3] Third Year/[1] First Term/BMEG 310/[3] Group Projects/Assignment 3")
+knitr::opts_knit$set(root.dir = "\\Users\\jjtho\\OneDrive\\Desktop\\Assignment 3 Solo")
 ```
 
 ## Q1: Why areas of the genome with high GC content are hard to sequence?
@@ -64,6 +64,8 @@ print(paste("Number of reads in the file that align to chromosome X:",number_of_
 #Isolating the Base Quality Reads of X-Chromosome
 base_quality_read <- sam[sam[,3]=="X",]
 
+base_quality_read <- base_quality_read[order(base_quality_read$V4), ]
+
 #Creating a Data Frame to store the converted values
 mean_bq <- data.frame("Read_Name:"=base_quality_read$V1)
 
@@ -78,6 +80,7 @@ for (i in 1: number_of_reads){
   
   #Adds the mean base quality into the dataframe
   mean_bq$Mean_Base_Quality[i] <- mean(bq_indiv_read)
+
 }
 
  print(paste("Mean of the Reads:", mean(mean_bq$Mean_Base_Quality)))
@@ -86,19 +89,28 @@ for (i in 1: number_of_reads){
 
 ### Q4.5.
 ```{r}
-#library(ggplot2)
+boxplot_data <- list()
+bq <- (mean_bq$Bq)
+for (i in 1:58) {
+  boxplot_data[[i]] <- sapply(bq, function(x) x[i])
+}
 
-#base_quality_read <- sam[sam[,3]=="X",]
+boxplot_data_df <- data.frame(Value = unlist(boxplot_data), Variable = rep(1:58, each = nrow(boxplot_data)))
 
-#for(i in 1:100){
-#boxplot(unlist(mean_bq$Bq[i]))
-#}
-#mean_bq$position <-sam$V4
-#sam$V4
-#order(mean_bq$Bq[1:100])
-#data<-boxplot(mean_bq$Bq[1:100])
+# Load ggplot2
+library(ggplot2)
+
+# Create the boxplot
+ggplot(boxplot_data_df, aes(x = as.factor(Variable), y = Value)) +
+  geom_boxplot() +
+  labs(x = "Variable", y = "Value") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
 
 ```
+
+
+
 
 ### Q4.6.
 The column that contains the leftmost mapping position of the reads is the POS column, found in the fourth column.
