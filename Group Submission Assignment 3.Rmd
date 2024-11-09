@@ -243,12 +243,32 @@ for (j in 1:nrow(VCF_df)){
 }
 
 #Gets a summary of the variant types
-data.frame(table(variant_types))
+variant_types_df <- data.frame(table(variant_types))
+print(variant_types_df)
 ```
 
 ###Q5.6
-A frame shift variant is a variant that shifts all codons after that mutation because it is not a multiple of 3. Therefore entirely changing the protein made from that sequence, this causes more harm than mutations that are multiples of three as they only change one amino
+A frame shift variant is a variant that shifts all codons after that mutation because it is not a multiple of 3. Therefore entirely changing the protein made from that sequence, this causes more harm than mutations that are multiples of three as they only change one amino acid in the protein, instead of all of them. 
 
+###Q5.7 
+```{r}
+intron_inter_count <- 0
+exon_count <- 0
+for(i in 1:length(variant_types)){
+  if(grepl("intron", variant_types_df$variant_types[i])){
+    intron_inter_count <- intron_inter_count + variant_types_df$Freq[i]
+  }
+  if(grepl("inter", variant_types_df$variant_types[i])){
+    intron_inter_count <- intron_inter_count + variant_types_df$Freq[i]
+  }
+  
+    if(grepl("exon", variant_types_df$variant_types[i])){
+    exon_count <- exon_count + variant_types_df$Freq[i]
+  }
+  
+}
+print(paste("Exonic variant Count:", exon_count, "Intronic/Intergenic Variant Count", intron_inter_count))
+```
 
 ### Q5.8
 ```{r}
