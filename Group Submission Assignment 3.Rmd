@@ -14,124 +14,9 @@ knitr::opts_knit$set(root.dir = "/Users/arabelatan/Desktop/[1] UBC/[3] Third Yea
 Areas in the genome with high G-C content are challenging to sequence because they have strong hydrogen bonds. These hydrogen bonds are stable, and therefore can form secondary structures. These structures do not respond to amplification, and therefore areas with high G-C content are challenging to accurately amplify. 
 
 ## Q2
-```{r}
-#Function that assigns what point to be used depending if the letters match or not
-verdict <- function(first_letter, second_letter){
-  
-  #Mismatch Score
-  if(first_letter==second_letter){
-    point <- 1
-  }else{
-    if((first_letter=="A" || first_letter=="G") && (second_letter=="G" || second_letter=="A")){
-    point <- - 1
-    }else if((first_letter=="T" || first_letter=="C") && (second_letter=="C" || second_letter=="T")){
-    point <- -1 
-    }
-    else{
-    point <- -5 
-    }
-  }
-  return (point)
-}
+![Alt text](https://raw.githubusercontent.com/jjthomp/BMEG310_Assignment_3/blob/beacc4781d518235528ce43ad58cf848000e0bea/IMG_0525.jpg)
 
-#Scoring Matrix 
-#strsplit("ATTCGAC", split="")
-sequence1 <- c("A","T","T","C","G","A","C")
-sequence2 <- c("A","T","C","A","C")
 
-# scoring_matrix
-Needleman_Wunsch_Algorithmn <- function(first_sequence,second_sequence){
-  
-  #Separating the string into individual characters
-  sequence1<-unlist(strsplit(first_sequence,""))
-  sequence2<-unlist(strsplit(second_sequence,""))
-  
-  #Creating an empty matrix
-  scoring_matrix<-matrix(0,nrow=length(sequence2)+2,ncol=length(sequence1)+2)
-
-  #Setting the gap value
-  gap <- -2
-
-  #Setting up the horizontal gap values
-  for(i in 1:length(sequence1)+1){
-    scoring_matrix[2,i+1]<- scoring_matrix[2,i] + gap
-  }
-
-  #Setting up the vertical gap values
-  for(j in 1:length(sequence2)+1){
-    scoring_matrix[j+1,2]<- scoring_matrix[j,2] + gap
-  }
-
-  #Sets the number of the last column and last row
-  row_end <- length(sequence2)+2
-  col_end <- length(sequence1)+2
-
-  #Calculates the scoring matrix
-  for(i in 3:row_end){
-    for(j in 3:col_end){
-      diagonal <- scoring_matrix[i-1,j-1] + verdict(sequence1[j-2],sequence2[i-2])
-      up_score <- scoring_matrix[i-1,j] + gap
-      left_score <- scoring_matrix[i,j-1] + gap
-      scoring_matrix[i,j]<-max(diagonal,up_score,left_score)
-    }
-  }
-
-  #Inputs the Sequence 1 and Sequence 2 into the matrix
-  scoring_matrix[1, 3:(length(sequence1)+2)] <- sequence1
-  scoring_matrix[3:(length(sequence2)+2),1] <- sequence2
-
-  return(scoring_matrix)
-}
-
-scoring_matrix<-Needleman_Wunsch_Algorithmn("ATTCGAC","ATCAC")
-
-Alignment<-function(scoring_matrix){
-  
-  seq1_alignmnet<-c()
-  seq2_alignment<-c()
-    
-  j <- ncol(scoring_matrix)
-  i <- nrow(scoring_matrix)
-
-  while(i>2 && j>2){
-      if(scoring_matrix[i,1]==scoring_matrix[1,j]){
-  
-        seq1_alignmnet <- c(scoring_matrix[1, j],seq1_alignmnet )
-        seq2_alignment <- c(scoring_matrix[i, 1],seq2_alignment)
-        i <- i-1
-        j <- j-1
-        
-      }else{
-        
-        left_value<-scoring_matrix[i,j-1]
-        up_value<-scoring_matrix[i-1,j]
-        diagonal_value<-scoring_matrix[i-1,j-1]
-        max_val<-max(left_value,up_value,diagonal_value)
-        
-        if(max_val==left_value){
-          seq2_alignment <- c("-", seq2_alignment)
-          seq1_alignmnet <- c(scoring_matrix[1, j], seq1_alignmnet)
-          j <- j-1
-        }else if(max_val==up_value){
-          seq2_alignment <- c(scoring_matrix[i, 1], seq2_alignment)
-          seq1_alignmnet <- c("-", seq1_alignmnet)
-          i<-i-1
-        }else{
-          seq2_alignment <- c(scoring_matrix[1, j - 1], seq2_alignment)
-          seq1_alignmnet <- c(scoring_matrix[i - 1, 1], seq1_alignmnet)
-          i<-i-1
-          j<-j-1
-        }
-      }
-  }
-  print(paste("Aligned Sequence 1:", paste(seq1_alignmnet, collapse = "")))
-  print(paste("Aligned Sequence 2:", paste(seq2_alignment, collapse = "")))
-}
-
-scoring_matrix
-Alignment(Needleman_Wunsch_Algorithmn("ATTCGAC","ATCAC"))
-
-```
 
 ## Q3. Looking at the Metadata of an alignment (SAM) file
 
@@ -345,6 +230,10 @@ for (j in 1:nrow(VCF_df)){
 #Gets a summary of the variant types
 data.frame(table(variant_types))
 ```
+
+###Q5.6
+A frame shift variant is a variant that shifts all codons after that mutation because it is not a multiple of 3. Therefore entirely changing the protein made from that sequence, this causes more harm than mutations that are multiples of three as they only change one amino
+
 
 ### Q5.8
 ```{r}
