@@ -89,22 +89,13 @@ for (i in 1: number_of_reads){
 
 ### Q4.5.
 ```{r}
-boxplot_data <- list()
-bq <- (mean_bq$Bq)
-for (i in 1:58) {
-  boxplot_data[[i]] <- sapply(bq, function(x) x[i])
-}
+boxplot(mean_bq$Bq, names = mean_bq$position,
+        main = "Boxplot of Bq per Position",
+        xlab = "Position", ylab = "Bq",
+        col = "tomato", border = "black",
+        las = 2,         # Make x-axis labels vertical
+        lwd = 0.2) 
 
-boxplot_data_df <- data.frame(Value = unlist(boxplot_data), Variable = rep(1:58, each = nrow(boxplot_data)))
-
-# Load ggplot2
-library(ggplot2)
-
-# Create the boxplot
-ggplot(boxplot_data_df, aes(x = as.factor(Variable), y = Value)) +
-  geom_boxplot() +
-  labs(x = "Position in Read", y = "Base Quality") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
 ```
@@ -252,23 +243,26 @@ A frame shift variant is a variant that shifts all codons after that mutation be
 
 ###Q5.7 
 ```{r}
-intron_inter_count <- 0
-exon_count <- 0
+intron_inter_count <- 0 #variable for intron count
+exon_count <- 0 #variable for exon count
 for(i in 1:length(variant_types)){
+  #check for the word intron (intronic will also be considered as intron)
   if(grepl("intron", variant_types_df$variant_types[i])){
     intron_inter_count <- intron_inter_count + variant_types_df$Freq[i]
   }
+  #check for the word inter (intergenic will also be considered as inter)
   if(grepl("inter", variant_types_df$variant_types[i])){
     intron_inter_count <- intron_inter_count + variant_types_df$Freq[i]
   }
-  
+  #check for the word exon (exonic will also be considered as exon)
     if(grepl("exon", variant_types_df$variant_types[i])){
     exon_count <- exon_count + variant_types_df$Freq[i]
   }
   
 }
-print(paste("Exonic variant Count:", exon_count, "Intronic/Intergenic Variant Count", intron_inter_count))
+print(paste("Exonic variant Count:", exon_count, "Intronic/Intergenic Variant Count:", intron_inter_count)))
 ```
+There are more intronic and intergenic variants compared to exonic variants. This makes sense as majority of the geonome is intron coding regions. 
 
 ### Q5.8
 ```{r}
