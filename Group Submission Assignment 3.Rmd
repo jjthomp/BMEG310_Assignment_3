@@ -103,7 +103,7 @@ library(ggplot2)
 # Create the boxplot
 ggplot(boxplot_data_df, aes(x = as.factor(Variable), y = Value)) +
   geom_boxplot() +
-  labs(x = "Variable", y = "Value") +
+  labs(x = "Position in Read", y = "Base Quality") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
@@ -273,7 +273,6 @@ print(paste("Exonic variant Count:", exon_count, "Intronic/Intergenic Variant Co
 ### Q5.8
 ```{r}
 high_impact_genes <- c()
-moderate_impact_genes <- c()
 
 for (i in 1:nrow(variants)) {
   info_field <- as.character(variants$INFO[i])
@@ -294,9 +293,6 @@ for (i in 1:nrow(variants)) {
         high_impact_genes <- c(high_impact_genes, gene_name)
       }
 
-      if (impact == "MODERATE" && feature_type == "protein_coding") {
-        moderate_impact_genes <- c(moderate_impact_genes, gene_name)
-      }
     }
   }
 }
@@ -304,5 +300,38 @@ unique_high_impact_genes <- unique(high_impact_genes)
 unique_moderate_impact_genes <- unique(moderate_impact_genes)
 
 cat("Unique genes affected by HIGH impact coding mutations:\n", unique_high_impact_genes, "\n\n")
-cat("Unique genes affected by MODERATE impact coding mutations:\n", unique_moderate_impact_genes, "\n")
 ```
+
+###Q5.9
+Strelka's limited capabilities of reading indels will mean it will not be able to read insertions outside the 60bp constraints. Therefore, it can't read insertions exceeding the 60bp. 
+
+###Q5.10
+```{r}
+genotype_field <- as.character(variants$ws20171223_MPs_tomatoMuscle8wkQuiescent201)
+genotype_field_parts <- strsplit(genotype_field, ":")
+genotype_field_ad <- list()
+for (i in 1:836) {
+  genotype_field_ad[i] <- genotype_field_parts[[i]][6]
+}
+
+genotype_field_ad_split <- sapply(genotype_field_ad, function(x) strsplit(x, ","))
+reference_list <- sapply(genotype_field_ad_split, function(x) as.numeric(x[1]))
+variant_list <- sapply(genotype_field_ad_split, function(x) as.numeric(x[2]))
+df_vcf <- data.frame(Reference=reference_list, Variant = variant_list, Coding_region = variants$INFO)
+df_vcf$VAF <- df_vcf$Variant/(df_vcf$Variant + df_vcf$Reference)
+
+boxplot(df_vcf$VAF, main="Boxplot Distribution of VAFs across all the variants")
+
+five_percent <- (length(df_vcf$VAF[df_vcf$VAF > 0.05]))
+
+print(paste("Variants with VAF > 5%:", five_percent))
+
+#Only checking the ones that are in the coding region   
+coding_region <- df_vcf[grepl("coding", df_vcf),]
+print(paste("Number of variants in the coding region that have VAF > 5%:", length(coding_region[coding_region$VAF > 0.05,3])))
+
+
+
+```
+
+
